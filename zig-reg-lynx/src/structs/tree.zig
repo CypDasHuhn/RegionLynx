@@ -14,11 +14,11 @@ pub const Tree = struct {
     splitter: Splitter,
     boundingBox: Region,
 
-    pub fn fromRegions(regions: []*Region, boundingBox: *Region) !Tree {
+    pub fn fromRegions(regions: []*Region, boundingBox: *const Region) !Tree {
         var bestSplitter: ?Splitter = null;
-        var bestResult: SplitterResult = .{ .score = 0.0 };
+        var bestResult: SplitterResult = .{ .score = 0.0, .left = undefined, .right = undefined, .overlapping = undefined };
 
-        const axisList: []Axis = []Axis{ .X, .Y, .Z };
+        const axisList = [_]Axis{ .X, .Y, .Z };
         for (axisList) |axis| {
             if (bestResult.score == 1.0) break;
 
@@ -150,7 +150,7 @@ pub const Splitter = struct {
         }
     }
 
-    pub fn splitBoundaryBox(self: @This(), boundingBox: *Region) struct { left: Region, right: Region } {
+    pub fn splitBoundaryBox(self: @This(), boundingBox: *const Region) struct { left: Region, right: Region } {
         const left = boundingBox.clone();
         const right = boundingBox.clone();
 
