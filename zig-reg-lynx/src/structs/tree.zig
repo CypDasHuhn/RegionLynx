@@ -155,7 +155,7 @@ pub const Splitter = struct {
         }
     }
 
-    pub fn splitBoundaryBox(self: @This(), boundingBox: *Region) struct { left: Region, right: Region } {
+    pub fn splitBoundaryBox(self: @This(), boundingBox: *const Region) struct { left: Region, right: Region } {
         const left = boundingBox.clone();
         const right = boundingBox.clone();
 
