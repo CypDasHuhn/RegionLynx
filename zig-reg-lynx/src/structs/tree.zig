@@ -14,20 +14,25 @@ pub const Tree = struct {
     splitter: Splitter,
     boundingBox: Region,
 
-    pub fn fromRegions(regions: []*Region, boundingBox: *Region) !Tree {
+    pub fn fromRegions(regions: []*Region, boundingBox: *const Region) !Tree {
         var bestSplitter: ?Splitter = null;
-        var bestResult: SplitterResult = .{ .score = 0.0 };
+        var bestResult: SplitterResult = .{ .score = 0.0, .left = undefined, .right = undefined, .overlapping = undefined };
 
-        const axisList: []Axis = []Axis{ .X, .Y, .Z };
+        const axisList = [_]Axis{ .X, .Y, .Z };
         for (axisList) |axis| {
             if (bestResult.score == 1.0) break;
 
-            const splitterValuesStorage: [regions.len * 2]i32 = undefined;
-            const splitterValues = std.ArrayListUnmanaged(i32).init(&splitterValuesStorage);
+            // TODO: replace gpa
+            var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+            const allocator = gpa.allocator();
+
+            var splitterValues = std.ArrayList(i32).initCapacity(allocator, 2^12);
+            defer splitterValues.deinit();
+
             const forbiddenValues: [2]i32 = boundingBox.arrayByAxis(axis);
             for (regions) |region| {
                 const values = region.arrayByAxis(axis);
-                splitterValues.appendAll(values);
+                splitterValues.appendSlice(gpa, values);
             }
             // remove forbidden values
             splitterValues.removeRange(forbiddenValues[0], forbiddenValues[1]);
@@ -84,8 +89,8 @@ pub const Tree = struct {
 };
 
 pub fn firstBoundingBox(regions: []*Region) Region {
-    const min = Position{ .x = 0, .y = 0, .z = 0 };
-    const max = min;
+    var min = Position{ .x = 0, .y = 0, .z = 0 };
+    var max = min;
 
     for (regions) |region| {
         const axisList = [_]Axis{ .X, .Y, .Z };
